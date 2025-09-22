@@ -172,12 +172,18 @@ SECRET_KEY=your-secret-key-here
 LOG_LEVEL=INFO
 LOG_FILE=logs/app.log
 
-# 文件上传配置
-MAX_UPLOAD_SIZE=104857600  # 100MB
-ALLOWED_EXTENSIONS=csv
+# 文件上传配置（注意：列表类型使用 JSON 数组表示）
+# 100MB
+MAX_UPLOAD_SIZE=104857600
+ALLOWED_EXTENSIONS=["csv"]
 
-# CORS配置
-ALLOWED_ORIGINS=http://localhost:3000,http://localhost:8000
+# CORS配置（使用 JSON 数组）
+ALLOWED_ORIGINS=["http://localhost:3000","http://localhost:8000"]
+ALLOWED_METHODS=["GET","POST","PUT","DELETE","OPTIONS"]
+ALLOWED_HEADERS=["*"]
+
+# 导出格式（使用 JSON 数组）
+SUPPORTED_EXPORT_FORMATS=["png","svg","pdf"]
 EOF
 
     # 如果.env文件不存在，则复制示例文件
@@ -427,7 +433,9 @@ main() {
     echo ""
     echo "下一步操作:"
     echo "1. 激活Python环境: source venv/bin/activate"
-    echo "2. 启动后端服务: python -m uvicorn backend.main:app --reload"
+    echo "2. 启动后端服务(二选一):"
+    echo "   - uvicorn main:app --app-dir backend --reload"
+    echo "   - uvicorn backend.main:app --reload"
     echo "3. 启动前端服务: cd frontend && npm run dev"
     echo "4. 运行测试: ./setup.sh --test-run"
     echo ""

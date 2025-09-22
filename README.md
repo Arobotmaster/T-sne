@@ -28,8 +28,11 @@
 ## 快速开始
 
 ### 环境要求
-- Python 3.11+
-- 现代Web浏览器
+- Python 3.11（推荐）
+- Node.js 16+（仅前端开发模式需要）
+- 现代 Web 浏览器
+
+提示：如果你使用 Python 3.12，请将 `backend/requirements.txt` 中的 `numpy==1.24.4` 升级到 `numpy>=1.26.4,<2` 再安装依赖。
 
 ### 安装和运行
 
@@ -50,18 +53,37 @@
    npm install
    ```
 
-3. **启动应用**
+3. **配置环境变量（.env）**
+   - 本项目使用 pydantic-settings 读取 `.env`，列表类型字段需要 JSON 数组格式：
+   ```env
+   # 示例：将下列内容保存为项目根目录的 .env
+   DEBUG=true
+   LOG_LEVEL=INFO
+   MAX_UPLOAD_SIZE=104857600
+   ALLOWED_EXTENSIONS=["csv"]
+   ALLOWED_ORIGINS=["http://localhost:3000","http://localhost:8000"]
+   ALLOWED_METHODS=["GET","POST","PUT","DELETE","OPTIONS"]
+   ALLOWED_HEADERS=["*"]
+   SUPPORTED_EXPORT_FORMATS=["png","svg","pdf"]
+   ```
+   - 你也可以直接复制 `setup.sh` 生成的 `.env.example` 为 `.env` 并按需修改。
+
+4. **启动应用**
    ```bash
    # 开发模式
-   cd backend
-   python -m uvicorn main:app --reload
+   # 从项目根目录执行，正确方式如下两选一：
+   uvicorn main:app --app-dir backend --host 0.0.0.0 --port 8000  # 推荐
+   # 或者（不使用 --app-dir 时）：
+   uvicorn backend.main:app --host 0.0.0.0 --port 8000
 
    # 或使用Docker
    docker-compose up
    ```
 
 4. **访问应用**
-   打开浏览器访问: http://localhost:8000
+打开浏览器访问: http://localhost:8000
+
+静态页面（如已构建）：http://localhost:8000/static/index.html
 
 ## 使用方法
 
@@ -149,3 +171,26 @@ MIT License
 ## 联系方式
 
 如有问题，请通过GitHub Issues联系我们。# T-sne
+ 
+## 部署与复现指南
+
+- 一键初始化（开发环境）：
+  ```bash
+  ./setup.sh
+  # 会创建 venv、安装后端依赖（包含 psutil）、安装前端依赖，并生成 .env.example
+  ```
+- 生产部署（Docker 推荐）：
+  ```bash
+  docker-compose up -d
+  # data/ 与 logs/ 会自动挂载为持久化卷
+  ```
+- 常见问题：
+  - `No module named 'backend'`：请使用 `uvicorn main:app --app-dir backend` 启动；或从根目录使用 `uvicorn backend.main:app`。
+  - `pydantic_settings JSONDecodeError`：`.env` 中的列表字段必须是 JSON 数组格式（见上文示例），或删除对应字段让应用使用默认值。
+  - Python 3.12 与 numpy 构建失败：升级 numpy 至 `>=1.26.4,<2`，或使用 Python 3.11。
+
+## 变更记录（近期）
+
+- 修复 `.env` 列表字段解析问题：统一改为 JSON 数组格式（`ALLOWED_EXTENSIONS`、`ALLOWED_ORIGINS`、`ALLOWED_METHODS`、`ALLOWED_HEADERS`、`SUPPORTED_EXPORT_FORMATS`）。
+- 增加后端依赖：`psutil`。
+- 启动文档澄清：使用 `uvicorn main:app --app-dir backend` 或 `uvicorn backend.main:app`。

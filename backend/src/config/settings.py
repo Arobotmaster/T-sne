@@ -8,7 +8,7 @@ import os
 from pathlib import Path
 from typing import Dict, Any, List, Optional
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import Field, validator
+from pydantic import Field, validator, field_validator
 
 
 class Settings(BaseSettings):
@@ -151,6 +151,28 @@ class Settings(BaseSettings):
         if not isinstance(v, list):
             raise ValueError('ALLOWED_EXTENSIONS必须是列表')
         return [ext.lower().lstrip('.') for ext in v]
+
+    # 兼容 .env 中以逗号分隔的字符串写法，自动转为列表
+    @field_validator(
+        'ALLOWED_EXTENSIONS',
+        'ALLOWED_ORIGINS',
+        'ALLOWED_METHODS',
+        'ALLOWED_HEADERS',
+        'SUPPORTED_EXPORT_FORMATS',
+        mode='before'
+    )
+    @classmethod
+    def coerce_comma_separated_to_list(cls, v):
+        """在正式解析前，将以逗号分隔的字符串转换为列表，增强配置容错性"""
+        if isinstance(v, str):
+            s = v.strip()
+            # 如果已经是 JSON 数组，让后续解析处理
+            if s.startswith('[') and s.endswith(']'):
+                return s
+            # 否则按逗号分隔处理
+            parts = [p.strip() for p in s.split(',') if p.strip()]
+            return parts
+        return v
 
     @validator('ENVIRONMENT')
     def validate_environment(cls, v):
