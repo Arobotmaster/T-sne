@@ -1,0 +1,49 @@
+列名含义说明：
+*  吸附容量：吸附Rn的容量(ΔN_Rn): N_ads,Rn - N_des,Rn
+*  选择性：对于Rn的选择性 ( S_Rn/N₂): (N_ads,Rn / N_ads,N₂) / (y_Rn / y_N₂)
+*  权衡值：(Trade-off Metric, TSN_Rn): ΔN_Rn × log(S_Rn/N₂)
+*  mofid-v1：MOFid标识符(参见https://pubs.acs.org/doi/full/10.1021/acs.cgd.9b01050)
+*  mofid-v2：MOFid第二版
+*  LCD (Å)：Zeo++计算的最大空腔直径(参见https://www.zeoplusplus.org/)
+*  PLD (Å)：Zeo++计算的限域孔径
+*  LFPD (Å)：Zeo++计算的最大自由孔径
+*  Density (g/cm3)：Zeo++计算的晶体密度
+*  ASA (A2)、ASA (m2/cm3)和ASA (m2/g)：Zeo++计算的可及表面积
+*  NASA (A2)、NASA (m2/cm3)和NASA (m2/g)：Zeo++计算的不可及表面积
+*  PV (A3)和PV (cm3/g)：Zeo++计算的孔体积
+*  VF：Zeo++计算的孔隙率
+*  NAV (A3)和NPV (cm3/g)：Zeo++计算的不可及孔体积
+*  NAV_VF：Zeo++计算的不可及孔隙率
+*  structure_dimension：Zeo++确定的框架维度
+*  topology(SingleNodes)：单节点定义的拓扑结构(参见https://scipost.org/10.21468/SciPostChem.1.2.005)
+*  topology(AllNodes)：全节点定义的拓扑结构
+*  catenation：网络交织数
+*  dimension_by_topo：CrystalNets.jl确定的维度
+*  hall：空间群符号
+*  number_spacegroup：空间群编号
+*  Metal Types：框架金属类型
+*  Has OMS：是否含有开放金属位点
+*  OMS Types：开放金属位点类型
+*  Charge：电荷来源(参见https://pubs.acs.org/doi/10.1021/acs.jctc.4c00434)
+*  average_atomic_mass：结构平均原子质量
+*  Heat_capacity@300K (J/g/K)：300K下机器学习预测的热容值(参见https://www.nature.com/articles/s41563-022-01374-3)
+*  std @ 300 K (J/g/K)：300K预测热容的不确定度
+*  Heat_capacity@350K (J/g/K)：350K下机器学习预测的热容值
+*  std @ 350 K (J/g/K)：350K预测热容的不确定度
+*  Heat_capacity@400K (J/g/K)：400K下机器学习预测的热容值
+*  std @ 400 K (J/g/K)：400K预测热容的不确定度
+*  k_cp (J/g/K/K)：斜率参数（热容= k_cp * 温度 + cp0）
+*  cp0 (J/g/K)：截距参数
+*  Pearson product-moment correlation coefficients：机器学习预测热容与拟合值的皮尔逊积矩相关系数
+*  natoms：晶胞内原子总数
+*  Source：结构来源（CSD或补充材料）
+*  DOI：文献数字对象标识符
+*  Year：发表年份
+*  Time：发表时间
+*  Publication：出版商
+*  Extension：结构分类标注
+*  unmodified：与原始结构相比是否未修改
+*  Thermal_stability(℃)：机器学习预测的热分解温度
+*  Solvent_stability：机器学习预测的溶剂稳定性概率（>0.5为稳定）
+*  Water_stability：机器学习预测的水稳定性概率（>0.5为稳定）
+*  KH_water：通过吉布斯系综蒙特卡洛(GEMC)模拟划分的亲疏水性MOFs分类

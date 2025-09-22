@@ -1,0 +1,890 @@
+openapi: 3.0.3
+info:
+  title: MOF数据t-SNE交互式可视化 API
+  description: 材料科学研究用MOF数据t-SNE降维和可视化Web应用API
+  version: 1.0.0
+  contact:
+    name: MOF Visualization Team
+    email: team@mof-viz.com
+
+servers:
+  - url: http://localhost:8000
+    description: 本地开发服务器
+
+paths:
+  # 数据上传和处理
+  /api/upload:
+    post:
+      summary: 上传CSV文件并开始处理
+      description: 用户上传包含MOF数据的CSV文件，系统自动识别格式并开始预处理
+      operationId: upload_csv_file
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: CSV文件，最大100MB
+                encoding:
+                  auto_detect:
+                    contentType: text/csv
+      responses:
+        '200':
+          description: 文件上传成功，返回数据集信息
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '413':
+          $ref: '#/components/responses/FileTooLarge'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+
+  /api/datasets/{dataset_id}:
+    get:
+      summary: 获取数据集信息
+      description: 获取指定数据集的详细信息和处理状态
+      operationId: get_dataset_info
+      parameters:
+        - name: dataset_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: 数据集唯一标识符
+      responses:
+        '200':
+          description: 数据集信息
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DatasetInfo'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # 数据处理API
+  /api/datasets/{dataset_id}/process:
+    post:
+      summary: 启动数据处理流水线
+      description: 启动t-SNE降维处理流程，支持参数配置
+      operationId: start_processing
+      parameters:
+        - name: dataset_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProcessingRequest'
+      responses:
+        '200':
+          description: 处理任务已启动
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessingResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: 数据集正在处理中
+
+  /api/pipelines/{pipeline_id}/status:
+    get:
+      summary: 获取处理状态
+      description: 获取指定处理流水线的实时状态和进度信息
+      operationId: get_pipeline_status
+      parameters:
+        - name: pipeline_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: 处理状态信息
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PipelineStatus'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # 可视化API
+  /api/visualizations/{pipeline_id}:
+    get:
+      summary: 获取可视化数据
+      description: 获取t-SNE降维后的可视化数据，包括坐标和配置信息
+      operationId: get_visualization_data
+      parameters:
+        - name: pipeline_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: 可视化数据
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VisualizationData'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '425':
+          description: 处理尚未完成
+
+  /api/visualizations/{pipeline_id}/config:
+    put:
+      summary: 更新可视化配置
+      description: 更新可视化的外观配置（颜色、样式等）
+      operationId: update_visualization_config
+      parameters:
+        - name: pipeline_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VisualizationConfig'
+      responses:
+        '200':
+          description: 配置更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VisualizationConfig'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # 导出API
+  /api/visualizations/{pipeline_id}/export:
+    post:
+      summary: 导出可视化图像
+      description: 将当前可视化导出为指定格式的图像文件
+      operationId: export_visualization
+      parameters:
+        - name: pipeline_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExportRequest'
+      responses:
+        '200':
+          description: 导出成功，返回文件下载链接
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExportResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/downloads/{file_id}:
+    get:
+      summary: 下载导出文件
+      description: 下载已生成的导出文件
+      operationId: download_file
+      parameters:
+        - name: file_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 文件内容
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # WebSocket连接
+  /ws/pipelines/{pipeline_id}:
+    get:
+      summary: WebSocket连接
+      description: 建立WebSocket连接以接收实时进度更新
+      operationId: websocket_connection
+      parameters:
+        - name: pipeline_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+
+components:
+  schemas:
+    # 基础响应类型
+    BaseResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: 请求是否成功
+        timestamp:
+          type: string
+          format: date-time
+          description: 响应时间
+        request_id:
+          type: string
+          format: uuid
+          description: 请求唯一标识符
+
+    ErrorResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+        - type: object
+          properties:
+            error:
+              type: object
+              properties:
+                code:
+                  type: string
+                  description: 错误代码
+                message:
+                  type: string
+                  description: 错误信息
+                details:
+                  type: object
+                  description: 错误详情
+
+    # 数据相关Schema
+    UploadResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                dataset_id:
+                  type: string
+                  format: uuid
+                filename:
+                  type: string
+                total_rows:
+                  type: integer
+                total_columns:
+                  type: integer
+                encoding:
+                  type: string
+                data_quality_score:
+                  type: number
+                  format: float
+                  minimum: 0
+                  maximum: 1
+                preview_rows:
+                  type: array
+                  items:
+                    type: object
+                    description: 数据预览行
+                detected_columns:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/ColumnInfo'
+                processing_time_ms:
+                  type: integer
+                  description: 处理耗时(毫秒)
+
+    ColumnInfo:
+      type: object
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+          enum: [numerical, categorical, descriptive]
+        nullable_ratio:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+        unique_values:
+          type: integer
+        sample_values:
+          type: array
+          items:
+            type: string
+
+    DatasetInfo:
+      type: object
+      properties:
+        dataset_id:
+          type: string
+          format: uuid
+        filename:
+          type: string
+        upload_timestamp:
+          type: string
+          format: date-time
+        total_rows:
+          type: integer
+        total_columns:
+          type: integer
+        file_size_bytes:
+          type: integer
+        encoding:
+          type: string
+        data_quality_score:
+          type: number
+          format: float
+        processing_status:
+          type: string
+          enum: [uploaded, processing, completed, failed]
+        categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/CategoryInfo'
+        latest_pipeline:
+          $ref: '#/components/schemas/PipelineSummary'
+
+    CategoryInfo:
+      type: object
+      properties:
+        category_id:
+          type: integer
+        category_name:
+          type: string
+        sample_count:
+          type: integer
+        color_code:
+          type: string
+          pattern: ^#[0-9A-Fa-f]{6}$
+
+    # 处理相关Schema
+    ProcessingRequest:
+      type: object
+      properties:
+        pca_config:
+          $ref: '#/components/schemas/PCAConfig'
+        tsne_config:
+          $ref: '#/components/schemas/TSNEConfig'
+        preprocessing_config:
+          $ref: '#/components/schemas/PreprocessingConfig'
+
+    PCAConfig:
+      type: object
+      properties:
+        n_components:
+          type: integer
+          minimum: 2
+          maximum: 100
+          default: 50
+        variance_retention:
+          type: number
+          format: float
+          minimum: 0.8
+          maximum: 1.0
+          description: 保留方差比例，如果设置则忽略n_components
+        whiten:
+          type: boolean
+          default: false
+        random_state:
+          type: integer
+          default: 42
+
+    TSNEConfig:
+      type: object
+      properties:
+        perplexity:
+          type: number
+          format: float
+          minimum: 5
+          maximum: 50
+          default: 30
+        n_components:
+          type: integer
+          minimum: 2
+          maximum: 3
+          default: 2
+        learning_rate:
+          type: number
+          format: float
+          minimum: 10
+          maximum: 1000
+          default: 200
+        n_iter:
+          type: integer
+          minimum: 250
+          maximum: 5000
+          default: 1000
+        random_state:
+          type: integer
+          default: 42
+        metric:
+          type: string
+          enum: [euclidean, manhattan, chebyshev, minkowski]
+          default: euclidean
+
+    PreprocessingConfig:
+      type: object
+      properties:
+        missing_value_strategy:
+          type: string
+          enum: [drop, mean, median, mode, interpolate]
+          default: mean
+        scaling_method:
+          type: string
+          enum: [standard, minmax, robust, none]
+          default: standard
+        outlier_detection:
+          type: boolean
+          default: true
+        outlier_threshold:
+          type: number
+          format: float
+          minimum: 1.5
+          maximum: 5.0
+          default: 3.0
+
+    ProcessingResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                pipeline_id:
+                  type: string
+                  format: uuid
+                dataset_id:
+                  type: string
+                  format: uuid
+                status:
+                  type: string
+                  enum: [pending, running, completed, failed]
+                estimated_duration_ms:
+                  type: integer
+                start_time:
+                  type: string
+                  format: date-time
+
+    PipelineStatus:
+      type: object
+      properties:
+        pipeline_id:
+          type: string
+          format: uuid
+        dataset_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [pending, running, completed, failed]
+        progress_percentage:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 100
+        current_step:
+          type: string
+        start_time:
+          type: string
+          format: date-time
+        end_time:
+          type: string
+          format: date-time
+        total_duration_ms:
+          type: integer
+        steps:
+          type: array
+          items:
+            $ref: '#/components/schemas/StepStatus'
+        error_message:
+          type: string
+        performance_metrics:
+          $ref: '#/components/schemas/PerformanceMetrics'
+
+    StepStatus:
+      type: object
+      properties:
+        step_name:
+          type: string
+        step_type:
+          type: string
+          enum: [preprocessing, pca, tsne, visualization]
+        status:
+          type: string
+          enum: [pending, running, completed, failed]
+        progress_percentage:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 100
+        start_time:
+          type: string
+          format: date-time
+        end_time:
+          type: string
+          format: date-time
+        duration_ms:
+          type: integer
+        input_rows:
+          type: integer
+        output_rows:
+          type: integer
+        memory_usage_mb:
+          type: number
+          format: float
+        error_message:
+          type: string
+
+    PerformanceMetrics:
+      type: object
+      properties:
+        total_memory_mb:
+          type: number
+          format: float
+        peak_memory_mb:
+          type: number
+          format: float
+        total_cpu_time_ms:
+          type: integer
+        average_cpu_usage:
+          type: number
+          format: float
+        disk_io_mb:
+          type: number
+          format: float
+
+    # 可视化相关Schema
+    VisualizationData:
+      type: object
+      properties:
+        visualization_id:
+          type: string
+          format: uuid
+        pipeline_id:
+          type: string
+          format: uuid
+        config:
+          $ref: '#/components/schemas/VisualizationConfig'
+        coordinates:
+          type: array
+          items:
+            $ref: '#/components/schemas/Coordinate'
+        categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/CategoryInfo'
+        statistics:
+          $ref: '#/components/schemas/VisualizationStatistics'
+        render_time_ms:
+          type: integer
+
+    Coordinate:
+      type: object
+      properties:
+        sample_id:
+          type: string
+        x:
+          type: number
+          format: float
+        y:
+          type: number
+          format: float
+        category_id:
+          type: integer
+        category_name:
+          type: string
+        descriptive_data:
+          type: object
+          additionalProperties: true
+        distance_to_center:
+          type: number
+          format: float
+        local_density:
+          type: number
+          format: float
+
+    VisualizationStatistics:
+      type: object
+      properties:
+        total_samples:
+          type: integer
+        valid_samples:
+          type: integer
+        category_counts:
+          type: object
+          additionalProperties:
+            type: integer
+        x_range:
+          type: object
+          properties:
+            min:
+              type: number
+              format: float
+            max:
+              type: number
+              format: float
+        y_range:
+          type: object
+          properties:
+            min:
+              type: number
+              format: float
+            max:
+              type: number
+              format: float
+        density_info:
+          type: object
+          properties:
+            high_density_regions:
+              type: integer
+            low_density_regions:
+              type: integer
+            average_density:
+              type: number
+              format: float
+
+    VisualizationConfig:
+      type: object
+      properties:
+        chart_title:
+          type: string
+          maxLength: 200
+        x_axis_label:
+          type: string
+          maxLength: 100
+        y_axis_label:
+          type: string
+          maxLength: 100
+        width:
+          type: integer
+          minimum: 400
+          maximum: 2000
+          default: 800
+        height:
+          type: integer
+          minimum: 300
+          maximum: 1500
+          default: 600
+        show_legend:
+          type: boolean
+          default: true
+        color_scheme:
+          type: array
+          items:
+            $ref: '#/components/schemas/ColorConfig'
+        marker_styles:
+          type: array
+          items:
+            $ref: '#/components/schemas/MarkerConfig'
+
+    ColorConfig:
+      type: object
+      properties:
+        category_id:
+          type: integer
+        color_hex:
+          type: string
+          pattern: ^#[0-9A-Fa-f]{6}$
+        opacity:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          default: 1.0
+
+    MarkerConfig:
+      type: object
+      properties:
+        category_id:
+          type: integer
+        marker_type:
+          type: string
+          enum: [circle, square, triangle, diamond, cross]
+        size:
+          type: integer
+          minimum: 1
+          maximum: 20
+          default: 6
+
+    # 导出相关Schema
+    ExportRequest:
+      type: object
+      properties:
+        format:
+          type: string
+          enum: [png, svg, pdf]
+          default: png
+        width:
+          type: integer
+          minimum: 400
+          maximum: 4000
+        height:
+          type: integer
+          minimum: 300
+          maximum: 3000
+        dpi:
+          type: integer
+          minimum: 72
+          maximum: 600
+          default: 300
+        background_color:
+          type: string
+          enum: [white, transparent, black]
+          default: white
+        filename:
+          type: string
+          maxLength: 100
+          pattern: ^[a-zA-Z0-9_\-\s\.]+$
+
+    ExportResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                file_id:
+                  type: string
+                filename:
+                  type: string
+                file_size_bytes:
+                  type: integer
+                download_url:
+                  type: string
+                  format: uri
+                expires_at:
+                  type: string
+                  format: date-time
+
+    PipelineSummary:
+      type: object
+      properties:
+        pipeline_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [pending, running, completed, failed]
+        start_time:
+          type: string
+          format: date-time
+        end_time:
+          type: string
+          format: date-time
+        config_summary:
+          $ref: '#/components/schemas/ProcessingRequest'
+
+  responses:
+    BadRequest:
+      description: 请求参数错误
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/ErrorResponse'
+              - type: object
+                properties:
+                  error:
+                    properties:
+                      code:
+                        example: INVALID_REQUEST
+                      message:
+                        example: 请求参数格式错误或缺少必要参数
+
+    NotFound:
+      description: 资源不存在
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/ErrorResponse'
+              - type: object
+                properties:
+                  error:
+                    properties:
+                      code:
+                        example: NOT_FOUND
+                      message:
+                        example: 请求的资源不存在
+
+    FileTooLarge:
+      description: 文件过大
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/ErrorResponse'
+              - type: object
+                properties:
+                  error:
+                    properties:
+                      code:
+                        example: FILE_TOO_LARGE
+                      message:
+                        example: 上传的文件超过最大限制(100MB)
+
+    UnsupportedMediaType:
+      description: 不支持的媒体类型
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/ErrorResponse'
+              - type: object
+                properties:
+                  error:
+                    properties:
+                      code:
+                        example: UNSUPPORTED_MEDIA_TYPE
+                      message:
+                        example: 仅支持CSV格式文件
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - BearerAuth: []
+
+tags:
+  - name: Data Management
+    description: 数据上传和管理相关接口
+  - name: Processing
+    description: 数据处理和算法执行接口
+  - name: Visualization
+    description: 可视化数据获取和配置接口
+  - name: Export
+    description: 图像导出相关接口
+  - name: Real-time
+    description: 实时通信相关接口

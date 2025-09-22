@@ -1,0 +1,21 @@
+{
+  "pipeline_id": "bbac5d6a-c043-4c4f-8b8d-fcc17b4ec207",
+  "source_file": "data/uploads/CSV_full_12088.csv",
+  "embedding": "E1",
+  "input_shape": [
+    12088,
+    24
+  ],
+  "pca_shape": [
+    12088,
+    24
+  ],
+  "tsne_params": {
+    "perplexity": 50,
+    "n_components": 2,
+    "learning_rate": 200,
+    "n_iter": 1000,
+    "random_state": 42
+  },
+  "created_at": "2025-09-21T22:07:35.717054"
+}

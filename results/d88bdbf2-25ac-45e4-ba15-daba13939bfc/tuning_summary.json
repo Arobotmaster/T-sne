@@ -1,0 +1,60 @@
+{
+  "results": [
+    {
+      "perplexity": 20,
+      "metric": "euclidean",
+      "kl_divergence": 0.8996334671974182,
+      "success": true
+    },
+    {
+      "perplexity": 30,
+      "metric": "euclidean",
+      "kl_divergence": 0.9138408303260803,
+      "success": true
+    },
+    {
+      "perplexity": 50,
+      "metric": "euclidean",
+      "kl_divergence": 0.9424524903297424,
+      "success": true
+    },
+    {
+      "perplexity": 20,
+      "metric": "manhattan",
+      "kl_divergence": 1.0103861093521118,
+      "success": true
+    },
+    {
+      "perplexity": 30,
+      "metric": "manhattan",
+      "kl_divergence": 1.0249683856964111,
+      "success": true
+    },
+    {
+      "perplexity": 50,
+      "metric": "manhattan",
+      "kl_divergence": 1.0279597043991089,
+      "success": true
+    }
+  ],
+  "search_space": {
+    "perplexity": [
+      20,
+      30,
+      50
+    ],
+    "metric": [
+      "euclidean",
+      "manhattan"
+    ]
+  },
+  "recommended": {
+    "perplexity": 20,
+    "n_components": 2,
+    "learning_rate": 200,
+    "n_iter": 1500,
+    "random_state": 42,
+    "metric": "euclidean",
+    "early_exaggeration": 24
+  }
+}

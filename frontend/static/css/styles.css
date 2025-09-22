@@ -1,0 +1,19 @@
+/* 基础布局与可视化区域样式 */
+body { background: #f5f7fb; min-height: 100vh; }
+.view-section { display: none; }
+#visualization-section .visualization-container { background: #fff; border-radius: 6px; }
+.stats-card { background: #fff; border: 1px solid #eee; padding: 12px; border-radius: 6px; text-align: center; }
+.category-indicator { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+
+/* 紧凑化控制面板 */
+.controls-panel .card-body { padding: 12px; }
+.controls-panel .form-label { margin-bottom: 4px; font-size: 0.9rem; }
+.controls-panel .form-text { margin-top: 2px; font-size: 0.75rem; display: none; }
+.controls-panel .row { margin-bottom: 6px; }
+.controls-panel .btn-group .btn { padding: 2px 8px; }
+.controls-panel .form-control, .controls-panel .form-select { padding: 2px 6px; }
+.controls-panel input[type="range"] { margin-top: 6px; }
+.controls-panel .col-md-3, .controls-panel .col-md-4 { flex: 0 0 auto; width: auto; }
+.controls-panel .form-select-sm, .controls-panel .form-control-sm { width: auto; min-width: 140px; }
+.controls-panel input[type="range"] { width: 150px; }
+.controls-panel #category-colors { display: none !important; }

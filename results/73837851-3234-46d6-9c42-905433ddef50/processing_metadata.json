@@ -1,0 +1,21 @@
+{
+  "pipeline_id": "73837851-3234-46d6-9c42-905433ddef50",
+  "source_file": "data/uploads/CSV_pld_filtered_category_4519.csv",
+  "embedding": "E2",
+  "input_shape": [
+    4508,
+    24
+  ],
+  "pca_shape": [
+    4508,
+    24
+  ],
+  "tsne_params": {
+    "perplexity": 30,
+    "n_components": 2,
+    "learning_rate": 200,
+    "n_iter": 1000,
+    "random_state": 42
+  },
+  "created_at": "2025-09-22T10:16:55.742394"
+}
